@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout
 from qframelesswindow import FramelessWindow, TitleBar
 from PyQt5.Qt import QUrl
 from PyQt5.QtWebEngineWidgets import *
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QPixmap
 
 
 class CustomTitleBar(TitleBar):
@@ -18,10 +18,10 @@ class CustomTitleBar(TitleBar):
         self.title.adjustSize()
         
         self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap("icono.ico"))
+        self.icon.setPixmap(QPixmap("icono.png"))
         self.icon.setScaledContents(True)
         self.icon.setFixedSize(30, 30)
-        
+        self.icon.setStyleSheet("QLabel{margin: 3px;}")
         self.hBoxLayout.insertWidget(0, self.icon, 100, Qt.AlignLeft)
         self.hBoxLayout.insertWidget(1, self.title, 100, Qt.AlignLeft)
         self.hBoxLayout.setContentsMargins(3, 0, 0, 0)
