@@ -6,6 +6,20 @@ from PyQt5.Qt import QUrl
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtGui import QPixmap
 
+from PyQt5 import QtCore, QtNetwork, QtWidgets
+
+class UniqueApplication(QtWidgets.QApplication):
+    anotherInstance = QtCore.pyqtSignal()
+    def isUnique(self):
+        socket = QtNetwork.QLocalSocket()
+        socket.connectToServer('Youtube Music')
+        return not socket.state()
+
+    def startListener(self):
+        self.listener = QtNetwork.QLocalServer(self)
+        self.listener.setSocketOptions(self.listener.WorldAccessOption)
+        self.listener.newConnection.connect(self.anotherInstance)
+        self.listener.listen('Youtube Music')
 
 class CustomTitleBar(TitleBar):
     """ Custom title bar """
@@ -87,8 +101,12 @@ if __name__ == "__main__":
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
     # run app
-    app = QApplication(sys.argv)
-    sizes = app.primaryScreen().size()
-    demo = Window(sizes)
-    demo.show()
-    sys.exit(app.exec_())
+    app = UniqueApplication(sys.argv)
+    if not app.isUnique():
+        pass
+    else:
+        app.startListener()
+        sizes = app.primaryScreen().size()
+        demo = Window(sizes)
+        demo.show()
+        sys.exit(app.exec_())
