@@ -18,7 +18,7 @@ class CustomTitleBar(TitleBar):
         self.title.adjustSize()
         
         self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap("icono.png"))
+        self.icon.setPixmap(QPixmap("icono.ico"))
         self.icon.setScaledContents(True)
         self.icon.setFixedSize(30, 30)
         self.icon.setStyleSheet("QLabel{margin: 3px;}")
