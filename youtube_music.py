@@ -1,11 +1,11 @@
 import sys
-from PyQt5.QtCore import Qt
+import os
+from PyQt5.QtCore import Qt, QSettings, QPoint, QSize
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout
 from qframelesswindow import FramelessWindow, TitleBar
 from PyQt5.Qt import QUrl
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtGui import QPixmap
-
 from PyQt5 import QtCore, QtNetwork, QtWidgets
 
 class UniqueApplication(QtWidgets.QApplication):
@@ -72,12 +72,19 @@ class Window(FramelessWindow):
         self.setWindowTitle("Youtube Music")
         self.setStyleSheet("background:#212121;")
         self.titleBar.raise_()
-        self.setMinimumSize(int(sizes.width()/1.9), int(sizes.height()/1.7))
+ 
+        # define the settings
+        self.settings = QSettings('ostizjuan', 'Youtube Music')
+        # if don't have the size, the window will be the size of the screen / 1.9 and / 1.7
+        self.resize(self.settings.value("size", QSize(int(sizes.width()/1.9), int(sizes.height()/1.7))))
+        self.move(self.settings.value("pos", QPoint(50, 50)))
+        self.last_url = self.settings.value('url', 'https://music.youtube.com')
+        self.setMinimumSize(int(sizes.width()/1.9), int(sizes.height()/1.7)) # it can't be smaller that size of the screen / 1.9 and / 1.7
 
         self.myLay = QVBoxLayout(self)
         self.myLay.setContentsMargins(0, 32, 0, 0)
         self.browser = QWebEngineView()
-        self.browser.setUrl(QUrl("https://music.youtube.com"))
+        self.browser.setUrl(QUrl(self.last_url))
         self.myLay.addWidget(self)
         self.myLay.addWidget(self.browser)
         self.setLayout(self.myLay)
@@ -91,6 +98,12 @@ class Window(FramelessWindow):
             self.width() // 2 - length // 2,
             self.height() // 2 - length // 2
         )
+
+    def closeEvent(self, e):
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+        self.settings.setValue('url', self.browser.url().toString())
+        e.accept()
 
 
 if __name__ == "__main__":
