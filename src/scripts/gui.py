@@ -1,25 +1,12 @@
-import sys
-import os
+from os import path, getcwd
+
 from PyQt5.QtCore import Qt, QSettings, QPoint, QSize
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QLabel, QVBoxLayout
 from qframelesswindow import FramelessWindow, TitleBar
 from PyQt5.Qt import QUrl
-from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtGui import QPixmap
-from PyQt5 import QtCore, QtNetwork, QtWidgets
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
 
-class UniqueApplication(QtWidgets.QApplication):
-    anotherInstance = QtCore.pyqtSignal()
-    def isUnique(self):
-        socket = QtNetwork.QLocalSocket()
-        socket.connectToServer('Youtube Music')
-        return not socket.state()
-
-    def startListener(self):
-        self.listener = QtNetwork.QLocalServer(self)
-        self.listener.setSocketOptions(self.listener.WorldAccessOption)
-        self.listener.newConnection.connect(self.anotherInstance)
-        self.listener.listen('Youtube Music')
 
 class CustomTitleBar(TitleBar):
     """ Custom title bar """
@@ -28,11 +15,13 @@ class CustomTitleBar(TitleBar):
 
         super().__init__(parent)
         self.title = QLabel('Youtube Music', self)
-        self.title.setStyleSheet("QLabel{font: 13px 'Century Gothic'; font-weight: bold ;margin: 10px; color:white;}")
+        self.title.setStyleSheet(
+            "QLabel{font: 13px 'Century Gothic'; font-weight: bold ;margin: 10px; color:white;}")
         self.title.adjustSize()
-        
+
         self.icon = QLabel(self)
-        self.icon.setPixmap(QPixmap("icono.ico"))
+        self.icon.setPixmap(
+            QPixmap(path.join(getcwd(), 'src', 'icono.ico')))
         self.icon.setScaledContents(True)
         self.icon.setFixedSize(30, 30)
         self.icon.setStyleSheet("QLabel{margin: 3px;}")
@@ -72,19 +61,40 @@ class Window(FramelessWindow):
         self.setWindowTitle("Youtube Music")
         self.setStyleSheet("background:#212121;")
         self.titleBar.raise_()
- 
+
         # define the settings
         self.settings = QSettings('ostizjuan', 'Youtube Music')
         # if don't have the size, the window will be the size of the screen / 1.9 and / 1.7
-        self.resize(self.settings.value("size", QSize(int(sizes.width()/1.9), int(sizes.height()/1.7))))
+        self.resize(self.settings.value("size", QSize(
+            int(sizes.width()/1.9), int(sizes.height()/1.7))))
         self.move(self.settings.value("pos", QPoint(50, 50)))
         self.last_url = self.settings.value('url', 'https://music.youtube.com')
-        self.setMinimumSize(int(sizes.width()/1.9), int(sizes.height()/1.7)) # it can't be smaller that size of the screen / 1.9 and / 1.7
-
+        # it can't be smaller that size of the screen / 1.9 and / 1.7
+        self.setMinimumSize(int(sizes.width()/1.9), int(sizes.height()/1.7))
         self.myLay = QVBoxLayout(self)
         self.myLay.setContentsMargins(0, 32, 0, 0)
-        self.browser = QWebEngineView()
+
+        # define the browser
+        self.profile = QWebEngineProfile("YT", self)
+        self.webpage = QWebEnginePage(self.profile, self)
+        self.browser = QWebEngineView(self)
+        self.browser.setPage(self.webpage)
+        self.browser.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         self.browser.setUrl(QUrl(self.last_url))
+
+        # adding style and disabling 'view source' and 'save page' options
+        self.browser.setStyleSheet('''
+            QMenu {
+                background: #282828;
+                color: white;
+            }
+            QMenu::item:selected {
+                background: lightGray;
+            }
+        ''')
+        self.browser.page().action(QWebEnginePage.ViewSource).setVisible(False)
+        self.browser.page().action(QWebEnginePage.SavePage).setVisible(False)
+
         self.myLay.addWidget(self)
         self.myLay.addWidget(self.browser)
         self.setLayout(self.myLay)
@@ -104,22 +114,3 @@ class Window(FramelessWindow):
         self.settings.setValue("pos", self.pos())
         self.settings.setValue('url', self.browser.url().toString())
         e.accept()
-
-
-if __name__ == "__main__":
-    # enable dpi scale
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-
-    # run app
-    app = UniqueApplication(sys.argv)
-    if not app.isUnique():
-        pass
-    else:
-        app.startListener()
-        sizes = app.primaryScreen().size()
-        demo = Window(sizes)
-        demo.show()
-        sys.exit(app.exec_())
