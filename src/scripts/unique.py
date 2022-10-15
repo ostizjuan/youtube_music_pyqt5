@@ -3,7 +3,11 @@ from PyQt5 import QtCore, QtNetwork
 
 
 class UniqueApplication(QApplication):
+    """Application that allows only one instance to run"""
     anotherInstance = QtCore.pyqtSignal()
+
+    def __init__(self, argv):
+        super().__init__(argv)
 
     def isUnique(self):
         socket = QtNetwork.QLocalSocket()

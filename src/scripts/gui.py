@@ -1,10 +1,10 @@
 from os import path, getcwd
 
 from PyQt5.QtCore import Qt, QSettings, QPoint, QSize
-from PyQt5.QtWidgets import QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QSystemTrayIcon, QMenu, QAction
 from qframelesswindow import FramelessWindow, TitleBar
 from PyQt5.Qt import QUrl
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
 
 
@@ -55,6 +55,8 @@ class Window(FramelessWindow):
     def __init__(self, sizes=(800, 600), parent=None):
         # change the default title bar if you like
         super().__init__()
+
+        # Set custom title bar
         self.setTitleBar(CustomTitleBar(self))
         self.label = QLabel(self)
         self.label.setScaledContents(True)
@@ -99,6 +101,40 @@ class Window(FramelessWindow):
         self.myLay.addWidget(self.browser)
         self.setLayout(self.myLay)
 
+        # set system trail
+        self.tray()
+
+    def tray(self):
+        """ Set the system tray """
+        self.trayIcon = QSystemTrayIcon(
+            QIcon(path.join(getcwd(), 'src', 'icono.ico')), self)
+        menu = QMenu(self)
+
+        # add style to the menu
+        menu.setStyleSheet(
+            '''QMenu{background: #282828; color: white;} QMenu::item:selected{background: Gray;}''')
+
+        # Creating the options
+        show_action = QAction("Show", self)
+        quit_action = QAction("Exit", self)
+
+        show_action.triggered.connect(self.show)
+        quit_action.triggered.connect(exit)
+
+        menu.addAction(show_action)
+        menu.addAction(quit_action)
+
+        self.trayIcon.setContextMenu(menu)
+
+        # show app when double click tray icon
+        self.trayIcon.activated.connect(self.onTrayIconActivated)
+        self.trayIcon.show()
+
+    def onTrayIconActivated(self, reason):
+        """ Show the window when the tray icon is double clicked """
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show()
+
     def resizeEvent(self, e):
         # don't forget to call the resizeEvent() of super class
         super().resizeEvent(e)
@@ -110,7 +146,18 @@ class Window(FramelessWindow):
         )
 
     def closeEvent(self, e):
+        e.ignore()
+
+        # save the url and the size and position of the window
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
         self.settings.setValue('url', self.browser.url().toString())
-        e.accept()
+
+        # Hide the window
+        self.hide()
+        self.trayIcon.showMessage(
+            "Youtube Music",
+            "Application was minimized to Tray",
+            QSystemTrayIcon.Information,
+            2000
+        )
