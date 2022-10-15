@@ -52,11 +52,12 @@ class CustomTitleBar(TitleBar):
 
 class Window(FramelessWindow):
 
-    def __init__(self, sizes=(800, 600), parent=None):
+    def __init__(self, app, sizes=(800, 600), parent=None):
         # change the default title bar if you like
         super().__init__()
 
         # Set custom title bar
+        self.app = app
         self.setTitleBar(CustomTitleBar(self))
         self.label = QLabel(self)
         self.label.setScaledContents(True)
@@ -119,7 +120,7 @@ class Window(FramelessWindow):
         quit_action = QAction("Exit", self)
 
         show_action.triggered.connect(self.show)
-        quit_action.triggered.connect(exit)
+        quit_action.triggered.connect(self.app.quit)
 
         menu.addAction(show_action)
         menu.addAction(quit_action)

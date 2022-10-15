@@ -21,7 +21,7 @@ if __name__ == "__main__":
         try:
             app.startListener()
             sizes = app.primaryScreen().size()
-            window = Window(sizes)
+            window = Window(app, sizes)
             window.show()
             sys.exit(app.exec_())
         except Exception as e:
